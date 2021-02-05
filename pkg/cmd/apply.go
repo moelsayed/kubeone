@@ -45,6 +45,7 @@ type applyOpts struct {
 	// Upgrade flags
 	ForceUpgrade              bool `longflag:"force-upgrade"`
 	UpgradeMachineDeployments bool `longflag:"upgrade-machine-deployments"`
+	RotateEncryptionKey       bool `longflag:"rotate-encryption-key"`
 }
 
 func (opts *applyOpts) BuildState() (*state.State, error) {
@@ -147,6 +148,12 @@ func applyCmd(rootFlags *pflag.FlagSet) *cobra.Command {
 		false,
 		"upgrade MachineDeployments objects")
 
+	cmd.Flags().BoolVar(
+		&opts.RotateEncryptionKey,
+		longFlagName(opts, "RotateEncryptionKey"),
+		false,
+		"rotate Encryption Provider encryption key")
+
 	return cmd
 }
 
@@ -244,6 +251,13 @@ func runApply(opts *applyOpts) error {
 		return nil
 	}
 
+	if opts.RotateEncryptionKey {
+		if s.Cluster.Features.EncryptionProviders.CustomProvidersFile != "" {
+			return errors.New("key rotation of custom providers file is not supported")
+		}
+		return runApplyRotateKey(s, opts)
+	}
+
 	return runApplyUpgradeIfNeeded(s, opts)
 }
 
@@ -314,9 +328,19 @@ func runApplyUpgradeIfNeeded(s *state.State, opts *applyOpts) error {
 	}
 
 	operations := []string{}
-
 	if upgradeNeeded || opts.ForceUpgrade {
-		tasksToRun = tasks.WithUpgrade(nil)
+		// disable case, we do this as early as possible.
+		if s.ShouldDisableEncryption() {
+			// something should happen here
+			tasksToRun = tasks.WithDisableEncryptionProviders(nil, s.Cluster.Features.EncryptionProviders.CustomProvidersFile != "")
+		}
+
+		tasksToRun = tasks.WithUpgrade(tasksToRun)
+
+		if s.ShouldEnableEncryption() {
+			operations = append(operations, "enable Encryption Provider support")
+			tasksToRun = tasks.WithRewriteSecrets(tasksToRun)
+		}
 
 		for _, node := range s.LiveCluster.ControlPlane {
 			forceFlag := ""
@@ -347,7 +371,7 @@ func runApplyUpgradeIfNeeded(s *state.State, opts *applyOpts) error {
 					s.Cluster.Versions.Kubernetes))
 		}
 	} else {
-		tasksToRun = tasks.WithRefreshResources(nil)
+		tasksToRun = tasks.WithRefreshResources(tasksToRun)
 	}
 
 	fmt.Println()
@@ -370,6 +394,37 @@ func runApplyUpgradeIfNeeded(s *state.State, opts *applyOpts) error {
 		return nil
 	}
 
+	return errors.Wrap(tasksToRun.Run(s), "failed to reconcile the cluster")
+}
+
+func runApplyRotateKey(s *state.State, opts *applyOpts) error {
+	if !opts.ForceUpgrade {
+		s.Logger.Error("rotating encryption keys requires the --force-upgrade flag")
+		return nil
+	}
+	if !s.EncryptionEnabled() {
+		s.Logger.Error("rotating encryption keys failed: Encryption Providers support is not enabled")
+		return nil
+	}
+
+	fmt.Println("The following actions will be taken: ")
+	fmt.Println("Run with --verbose flag for more information.")
+	tasksToRun := tasks.WithRotateKey(nil)
+
+	for _, op := range tasksToRun.Descriptions(s) {
+		fmt.Printf("\t~ %s\n", op)
+	}
+
+	fmt.Println()
+	confirm, err := confirmApply(opts.AutoApprove)
+	if err != nil {
+		return err
+	}
+
+	if !confirm {
+		s.Logger.Println("Operation canceled.")
+		return nil
+	}
 	return errors.Wrap(tasksToRun.Run(s), "failed to reconcile the cluster")
 }
 

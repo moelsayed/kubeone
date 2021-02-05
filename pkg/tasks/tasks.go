@@ -53,8 +53,8 @@ func (t Tasks) Descriptions(s *state.State) []string {
 		if step.Predicate != nil && !step.Predicate(s) {
 			continue
 		}
-		if step.Desciption != "" {
-			descriptions = append(descriptions, step.Desciption)
+		if step.Description != "" {
+			descriptions = append(descriptions, step.Description)
 		}
 	}
 
@@ -126,48 +126,48 @@ func WithRefreshResources(t Tasks) Tasks {
 	return t.append(
 		Tasks{
 			{
-				Fn:         nodelocaldns.Deploy,
-				ErrMsg:     "failed to deploy nodelocaldns",
-				Desciption: "ensure nodelocaldns",
+				Fn:          nodelocaldns.Deploy,
+				ErrMsg:      "failed to deploy nodelocaldns",
+				Description: "ensure nodelocaldns",
 			},
 			{
-				Fn:         ensureCNI,
-				ErrMsg:     "failed to install cni plugin",
-				Desciption: "ensure CNI",
-				Predicate:  func(s *state.State) bool { return s.Cluster.ClusterNetwork.CNI.External == nil },
+				Fn:          ensureCNI,
+				ErrMsg:      "failed to install cni plugin",
+				Description: "ensure CNI",
+				Predicate:   func(s *state.State) bool { return s.Cluster.ClusterNetwork.CNI.External == nil },
 			},
 			{
-				Fn:         addons.Ensure,
-				ErrMsg:     "failed to apply addons",
-				Desciption: "ensure addons",
-				Predicate:  func(s *state.State) bool { return s.Cluster.Addons != nil && s.Cluster.Addons.Enable },
+				Fn:          addons.Ensure,
+				ErrMsg:      "failed to apply addons",
+				Description: "ensure addons",
+				Predicate:   func(s *state.State) bool { return s.Cluster.Addons != nil && s.Cluster.Addons.Enable },
 			},
 			{
-				Fn:         credentials.Ensure,
-				ErrMsg:     "failed to ensure credentials secret",
-				Desciption: "ensure credential",
+				Fn:          credentials.Ensure,
+				ErrMsg:      "failed to ensure credentials secret",
+				Description: "ensure credential",
 			},
 			{
-				Fn:         externalccm.Ensure,
-				ErrMsg:     "failed to ensure external CCM",
-				Desciption: "ensure external CCM",
-				Predicate:  func(s *state.State) bool { return s.Cluster.CloudProvider.External },
+				Fn:          externalccm.Ensure,
+				ErrMsg:      "failed to ensure external CCM",
+				Description: "ensure external CCM",
+				Predicate:   func(s *state.State) bool { return s.Cluster.CloudProvider.External },
 			},
 			{
 				Fn:     certificate.DownloadCA,
 				ErrMsg: "failed to download ca from leader",
 			},
 			{
-				Fn:         machinecontroller.Ensure,
-				ErrMsg:     "failed to ensure machine-controller",
-				Desciption: "ensure machine-controller",
-				Predicate:  func(s *state.State) bool { return s.Cluster.MachineController.Deploy },
+				Fn:          machinecontroller.Ensure,
+				ErrMsg:      "failed to ensure machine-controller",
+				Description: "ensure machine-controller",
+				Predicate:   func(s *state.State) bool { return s.Cluster.MachineController.Deploy },
 			},
 			{
-				Fn:         upgradeMachineDeployments,
-				ErrMsg:     "failed to upgrade MachineDeployments",
-				Desciption: "upgrade MachineDeployments",
-				Predicate:  func(s *state.State) bool { return s.UpgradeMachineDeployments },
+				Fn:          upgradeMachineDeployments,
+				ErrMsg:      "failed to upgrade MachineDeployments",
+				Description: "upgrade MachineDeployments",
+				Predicate:   func(s *state.State) bool { return s.UpgradeMachineDeployments },
 			},
 		}...,
 	)
@@ -179,7 +179,7 @@ func WithUpgrade(t Tasks) Tasks {
 			Task{Fn: runProbes, ErrMsg: "probes failed"},
 			Task{Fn: safeguard, ErrMsg: "probes analysis failed"},
 		).
-		append(kubernetesConfigFiles()...).
+		append(kubernetesConfigFiles()...). // this, in the upgrade process where config rails are handled
 		append(Tasks{
 			{Fn: kubeconfig.BuildKubernetesClientset, ErrMsg: "failed to build kubernetes clientset"},
 			{Fn: runPreflightChecks, ErrMsg: "preflight checks failed", Retries: 1},
@@ -192,10 +192,10 @@ func WithUpgrade(t Tasks) Tasks {
 			Task{Fn: restartKubeAPIServer, ErrMsg: "failed to restart unhealthy kube-apiserver"},
 			Task{Fn: upgradeStaticWorkers, ErrMsg: "unable to upgrade static worker nodes"},
 			Task{
-				Fn:         upgradeMachineDeployments,
-				ErrMsg:     "failed to upgrade MachineDeployments",
-				Desciption: "upgrade MachineDeployments",
-				Predicate:  func(s *state.State) bool { return s.UpgradeMachineDeployments },
+				Fn:          upgradeMachineDeployments,
+				ErrMsg:      "failed to upgrade MachineDeployments",
+				Description: "upgrade MachineDeployments",
+				Predicate:   func(s *state.State) bool { return s.UpgradeMachineDeployments },
 			},
 		)
 }
@@ -227,43 +227,152 @@ func kubernetesConfigFiles() Tasks {
 func kubernetesResources() Tasks {
 	return Tasks{
 		{
-			Fn:         nodelocaldns.Deploy,
-			ErrMsg:     "failed to deploy nodelocaldns",
-			Desciption: "ensure nodelocaldns",
+			Fn:          nodelocaldns.Deploy,
+			ErrMsg:      "failed to deploy nodelocaldns",
+			Description: "ensure nodelocaldns",
 		},
 		{Fn: features.Activate, ErrMsg: "failed to activate features"},
 		{
-			Fn:         ensureCNI,
-			ErrMsg:     "failed to install cni plugin",
-			Desciption: "ensure CNI",
-			Predicate:  func(s *state.State) bool { return s.Cluster.ClusterNetwork.CNI.External == nil },
+			Fn:          ensureCNI,
+			ErrMsg:      "failed to install cni plugin",
+			Description: "ensure CNI",
+			Predicate:   func(s *state.State) bool { return s.Cluster.ClusterNetwork.CNI.External == nil },
 		},
 		{
-			Fn:         addons.Ensure,
-			ErrMsg:     "failed to apply addons",
-			Desciption: "ensure addons",
-			Predicate:  func(s *state.State) bool { return s.Cluster.Addons != nil && s.Cluster.Addons.Enable },
+			Fn:          addons.Ensure,
+			ErrMsg:      "failed to apply addons",
+			Description: "ensure addons",
+			Predicate:   func(s *state.State) bool { return s.Cluster.Addons != nil && s.Cluster.Addons.Enable },
 		},
 		{Fn: patchCoreDNS, ErrMsg: "failed to patch CoreDNS"},
 		{
-			Fn:         credentials.Ensure,
-			ErrMsg:     "failed to ensure credentials secret",
-			Desciption: "ensure credential",
+			Fn:          credentials.Ensure,
+			ErrMsg:      "failed to ensure credentials secret",
+			Description: "ensure credential",
 		},
 		{
-			Fn:         externalccm.Ensure,
-			ErrMsg:     "failed to ensure external CCM",
-			Desciption: "ensure external CCM",
-			Predicate:  func(s *state.State) bool { return s.Cluster.CloudProvider.External },
+			Fn:          externalccm.Ensure,
+			ErrMsg:      "failed to ensure external CCM",
+			Description: "ensure external CCM",
+			Predicate:   func(s *state.State) bool { return s.Cluster.CloudProvider.External },
 		},
 		{Fn: patchCNI, ErrMsg: "failed to patch CNI"},
 		{Fn: joinStaticWorkerNodes, ErrMsg: "failed to join worker nodes to the cluster"},
 		{
-			Fn:         machinecontroller.Ensure,
-			ErrMsg:     "failed to ensure machine-controller",
-			Desciption: "ensure machine-controller",
-			Predicate:  func(s *state.State) bool { return s.Cluster.MachineController.Deploy },
+			Fn:          machinecontroller.Ensure,
+			ErrMsg:      "failed to ensure machine-controller",
+			Description: "ensure machine-controller",
+			Predicate:   func(s *state.State) bool { return s.Cluster.MachineController.Deploy },
 		},
 		{Fn: machinecontroller.WaitReady, ErrMsg: "failed to wait for machine-controller"},
 	}
+}
+
+func WithDisableEncryptionProviders(t Tasks, customConfig bool) Tasks {
+	if customConfig {
+		return WithHostnameOS(t).
+			append(
+				Task{Fn: runProbes, ErrMsg: "probes failed"},
+				Task{Fn: safeguard, ErrMsg: "probes analysis failed"},
+			).append(Tasks{
+			{
+				Fn:          RemoveEncryptionProviderFile,
+				ErrMsg:      "failed to remove encryption providers configuration",
+				Description: "remove old Encryption Providers configuration file",
+			},
+			{
+				Fn:          RestartKubeAPI,
+				ErrMsg:      "failed to restart KubeAPI",
+				Description: "restart KubeAPI containers",
+			},
+			{
+				Fn:     WaitForAPI,
+				ErrMsg: "failed to wait",
+			},
+			{
+				Fn:          RewriteClusterSecrets,
+				ErrMsg:      "failed to rewrite cluster secrets",
+				Description: "rewrite all cluster secrets",
+			},
+		}...)
+	}
+	return WithHostnameOS(t).
+		append(
+			Task{Fn: runProbes, ErrMsg: "probes failed"},
+			Task{Fn: safeguard, ErrMsg: "probes analysis failed"},
+		).append(Tasks{
+		{
+			Fn:          FetchEncryptionProvidersFile,
+			ErrMsg:      "failed to fetch EncryptionProviders config",
+			Description: "fetch current Encryption Providers configuration file "},
+		{
+			Fn:          UploadIdentityFirstEncryptionConficguration,
+			ErrMsg:      "failed to upload encryption providers configuration",
+			Description: "upload updated Encryption Providers configuration file"},
+		{
+			Fn:          RestartKubeAPI,
+			ErrMsg:      "failed to restart KubeAPI",
+			Description: "restart KubeAPI containers"},
+		{Fn: WaitForAPI, ErrMsg: "failed to wait"},
+		{Fn: RewriteClusterSecrets,
+			ErrMsg:      "failed to rewrite cluster secrets",
+			Description: "rewrite all cluster secrets",
+		},
+		{Fn: RemoveEncryptionProviderFile,
+			ErrMsg:      "failed to remove encryption providers configuration",
+			Description: "remove old Encryption Providers configuration file",
+		},
+	}...)
+}
+
+func WithRewriteSecrets(t Tasks) Tasks {
+	return t.append(
+		Task{
+			Fn:          RewriteClusterSecrets,
+			ErrMsg:      "failed to rewrite cluster secrets",
+			Description: "rewrite all cluster secrets",
+		})
+}
+
+func WithRotateKey(t Tasks) Tasks {
+	return WithHostnameOS(t).
+		append(
+			Task{Fn: runProbes, ErrMsg: "probes failed"},
+			Task{Fn: safeguard, ErrMsg: "probes analysis failed"},
+		).append(Tasks{
+		{
+			Fn:          FetchEncryptionProvidersFile,
+			ErrMsg:      "failed to fetch EncryptionProviders config",
+			Description: "fetch current Encryption Providers configuration file ",
+		},
+		{
+			Fn:          UploadEncryptionConfigurationWithNewKey,
+			ErrMsg:      "failed to upload encryption providers configuration",
+			Description: "upload updated Encryption Providers configuration file",
+		},
+		{
+			Fn:          RestartKubeAPI,
+			ErrMsg:      "failed to restart KubeAPI",
+			Description: "restart KubeAPI containers",
+		},
+		{
+			Fn:     WaitForAPI,
+			ErrMsg: "failed to wait",
+		},
+		{
+			Fn:          RewriteClusterSecrets,
+			ErrMsg:      "failed to rewrite cluster secrets",
+			Description: "rewrite all cluster secrets",
+		},
+		{
+			Fn:          UploadEncryptionConfigurationWithoutOldKey,
+			ErrMsg:      "failed to upload encryption providers configuration",
+			Description: "upload updated Encryption Providers configuration file",
+		},
+		{
+			Fn:          RestartKubeAPI,
+			ErrMsg:      "failed to restart KubeAPI",
+			Description: "restart KubeAPI containers",
+		},
+	}...)
 }
