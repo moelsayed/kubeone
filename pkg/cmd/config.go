@@ -358,6 +358,23 @@ func createAndPrintManifest(printOptions *printOpts) error {
 	}
 
 	// Features
+	printFeatures(cfg, printOptions)
+
+	// machine-controller
+	if !printOptions.DeployMachineController {
+		cfg.Set(yamled.Path{"machineController", "deploy"}, printOptions.DeployMachineController)
+	}
+
+	// Print the manifest
+	err := validateAndPrintConfig(cfg)
+	if err != nil {
+		return errors.Wrap(err, "unable to validate and print config")
+	}
+
+	return nil
+}
+
+func printFeatures(cfg *yamled.Document, printOptions *printOpts) {
 	if printOptions.EnablePodNodeSelector {
 		cfg.Set(yamled.Path{"features", "podNodeSelector", "enable"}, printOptions.EnablePodSecurityPolicy)
 		cfg.Set(yamled.Path{"features", "podNodeSelector", "config", "configFilePath"}, "")
@@ -389,19 +406,6 @@ func createAndPrintManifest(printOptions *printOpts) error {
 	if printOptions.EnableEncryptionProviders {
 		cfg.Set(yamled.Path{"features", "encryptionProviders", "enable"}, printOptions.EnableEncryptionProviders)
 	}
-
-	// machine-controller
-	if !printOptions.DeployMachineController {
-		cfg.Set(yamled.Path{"machineController", "deploy"}, printOptions.DeployMachineController)
-	}
-
-	// Print the manifest
-	err := validateAndPrintConfig(cfg)
-	if err != nil {
-		return errors.Wrap(err, "unable to validate and print config")
-	}
-
-	return nil
 }
 
 func parseControlPlaneHosts(cfg *yamled.Document, hostList string) error {
