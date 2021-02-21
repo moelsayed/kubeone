@@ -20,7 +20,6 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 
 	kubeoneapi "k8c.io/kubeone/pkg/apis/kubeone"
 	"k8c.io/kubeone/pkg/scripts"
@@ -28,7 +27,9 @@ import (
 	"k8c.io/kubeone/pkg/state"
 	"k8c.io/kubeone/pkg/templates"
 	"k8c.io/kubeone/pkg/templates/admissionconfig"
-	encryptionproviders "k8c.io/kubeone/pkg/templates/encryption-providers"
+	encryptionproviders "k8c.io/kubeone/pkg/templates/encryptionproviders"
+
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func installPrerequisites(s *state.State) error {
@@ -61,8 +62,8 @@ func generateConfigurationFiles(s *state.State) error {
 		configFileName := s.GetEncryptionProviderConfigName()
 		var config string
 		// User provided custom config
-		if s.Cluster.Features.EncryptionProviders.CustomProvidersFile != "" {
-			config = s.Cluster.Features.EncryptionProviders.CustomProvidersFile
+		if s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration != "" {
+			config = s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration
 		} else { // automatically generate config
 			encryptionProvidersConfig, err := encryptionproviders.NewEncyrptionProvidersConfig(s)
 			if err != nil {

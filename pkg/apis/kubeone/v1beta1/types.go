@@ -575,6 +575,6 @@ type Addons struct {
 type EncryptionProviders struct {
 	// Enable
 	Enable bool `json:"enable"`
-	// CustomProvidersFile
-	CustomProvidersFile string `json:"customProvidersFile"`
+	// CustomEncryptionConfiguration
+	CustomEncryptionConfiguration string `json:"customEncryptionConfiguration"`
 }

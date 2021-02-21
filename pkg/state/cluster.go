@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/Masterminds/semver/v3"
+
 	apiserverconfigv1 "k8s.io/apiserver/pkg/apis/config/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -41,6 +42,7 @@ type EncryptionConfiguration struct {
 	Config *apiserverconfigv1.EncryptionConfiguration
 	Custom bool
 }
+
 type Host struct {
 	Config *kubeone.HostConfig
 

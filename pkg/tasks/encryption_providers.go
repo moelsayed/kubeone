@@ -18,22 +18,22 @@ package tasks
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"time"
+
+	"github.com/pkg/errors"
 
 	kubeoneapi "k8c.io/kubeone/pkg/apis/kubeone"
 	"k8c.io/kubeone/pkg/scripts"
 	"k8c.io/kubeone/pkg/ssh"
 	"k8c.io/kubeone/pkg/state"
 	"k8c.io/kubeone/pkg/templates"
+	encryptionproviders "k8c.io/kubeone/pkg/templates/encryptionproviders"
 
-	encryptionproviders "k8c.io/kubeone/pkg/templates/encryption-providers"
 	corev1 "k8s.io/api/core/v1"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	apiserverconfigv1 "k8s.io/apiserver/pkg/apis/config/v1"
+	"k8s.io/client-go/util/retry"
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 	kyaml "sigs.k8s.io/yaml"
 )
@@ -55,9 +55,10 @@ func FetchEncryptionProvidersFile(s *state.State) error {
 	if err != nil {
 		return err
 	}
-
+	s.LiveCluster.Lock.Lock()
 	s.LiveCluster.EncryptionConfiguration.Config = &apiserverconfigv1.EncryptionConfiguration{}
 	err = kyaml.UnmarshalStrict([]byte(config), s.LiveCluster.EncryptionConfiguration.Config)
+	s.LiveCluster.Lock.Unlock()
 	return err
 }
 
@@ -71,7 +72,9 @@ func UploadIdentityFirstEncryptionConficguration(s *state.State) error {
 
 	oldConfig := s.LiveCluster.EncryptionConfiguration.Config.DeepCopy()
 
-	encryptionproviders.UpdateEncryptionConfigDecryptOnly(oldConfig)
+	if err := encryptionproviders.UpdateEncryptionConfigDecryptOnly(oldConfig); err != nil {
+		return err
+	}
 
 	config, err := templates.KubernetesToYAML([]runtime.Object{oldConfig})
 	if err != nil {
@@ -89,7 +92,6 @@ func UploadEncryptionConfigurationWithNewKey(s *state.State) error {
 		return errors.New("failed to read live cluster encryption providers configuration")
 	}
 
-	// oldConfig := s.LiveCluster.EncryptionConfiguration.Config.DeepCopy()
 	if err := encryptionproviders.UpdateEncryptionConfigWithNewKey(s.LiveCluster.EncryptionConfiguration.Config); err != nil {
 		return err
 	}
@@ -110,8 +112,6 @@ func UploadEncryptionConfigurationWithoutOldKey(s *state.State) error {
 		s.LiveCluster.EncryptionConfiguration.Config == nil {
 		return errors.New("failed to read live cluster encryption providers configuration")
 	}
-
-	// oldConfig := s.LiveCluster.EncryptionConfiguration.Config.DeepCopy()
 
 	encryptionproviders.UpdateEncryptionConfigRemoveOldKey(s.LiveCluster.EncryptionConfiguration.Config)
 
@@ -144,37 +144,22 @@ func RewriteClusterSecrets(s *state.State) error {
 	if err != nil {
 		return err
 	}
-	for i := range secrets.Items {
-		secret := secrets.Items[i]
-		if err = s.DynamicClient.Update(context.Background(), &secret, &dynclient.UpdateOptions{}); err != nil {
-			if kerrors.IsConflict(err) {
-				err = s.DynamicClient.Get(context.Background(), types.NamespacedName{Name: secret.Name, Namespace: secret.Namespace}, &secret)
-				if err != nil {
-					return err
-				}
-				if err = s.DynamicClient.Update(context.Background(), &secret, &dynclient.UpdateOptions{}); err != nil {
-					return err
-				}
+	for _, secret := range secrets.Items {
+		name := secret.Name
+		namespace := secret.Namespace
+		updateErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			toRewrite := corev1.Secret{}
+
+			if err := s.DynamicClient.Get(s.Context, types.NamespacedName{Name: name, Namespace: namespace}, &toRewrite); err != nil {
+				return err
 			}
-			return err
+
+			return s.DynamicClient.Update(s.Context, &toRewrite)
+		})
+		if updateErr != nil {
+			return errors.WithStack(updateErr)
 		}
 	}
-	return nil
-}
-
-// FIXME: Static pods are not managed by the API, so we can't simply delete them to restart.
-// We should use a cleaner method to do this.
-func RestartKubeAPI(s *state.State) error {
-	s.Logger.Infof("Restarting KubeAPI...")
-	return s.RunTaskOnControlPlane(func(s *state.State, _ *kubeoneapi.HostConfig, _ ssh.Connection) error {
-		_, _, err := s.Runner.RunRaw(`docker restart $(docker ps --filter="label=io.kubernetes.container.name=kube-apiserver" -q)`)
-		return err
-	}, state.RunParallel)
-}
-
-func WaitForAPI(s *state.State) error {
-	s.Logger.Infof("Waiting %v to ensure all components are up...", 2*timeoutNodeUpgrade)
-	time.Sleep(2 * timeoutNodeUpgrade)
 	return nil
 }
 

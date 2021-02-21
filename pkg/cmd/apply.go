@@ -252,7 +252,12 @@ func runApply(opts *applyOpts) error {
 	}
 
 	if opts.RotateEncryptionKey {
-		if s.Cluster.Features.EncryptionProviders.CustomProvidersFile != "" {
+		if !s.EncryptionEnabled() {
+			return errors.New("Encryption Providers support is not enabled for this cluster")
+		}
+
+		if s.Cluster.Features.EncryptionProviders != nil &&
+			s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration != "" {
 			return errors.New("key rotation of custom providers file is not supported")
 		}
 		return runApplyRotateKey(s, opts)
@@ -332,7 +337,7 @@ func runApplyUpgradeIfNeeded(s *state.State, opts *applyOpts) error {
 		// disable case, we do this as early as possible.
 		if s.ShouldDisableEncryption() {
 			// something should happen here
-			tasksToRun = tasks.WithDisableEncryptionProviders(nil, s.Cluster.Features.EncryptionProviders.CustomProvidersFile != "")
+			tasksToRun = tasks.WithDisableEncryptionProviders(nil, s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration != "")
 		}
 
 		tasksToRun = tasks.WithUpgrade(tasksToRun)
@@ -400,11 +405,11 @@ func runApplyUpgradeIfNeeded(s *state.State, opts *applyOpts) error {
 func runApplyRotateKey(s *state.State, opts *applyOpts) error {
 	if !opts.ForceUpgrade {
 		s.Logger.Error("rotating encryption keys requires the --force-upgrade flag")
-		return nil
+		return errors.New("rotating encryption keys requires the --force-upgrade flag")
 	}
 	if !s.EncryptionEnabled() {
 		s.Logger.Error("rotating encryption keys failed: Encryption Providers support is not enabled")
-		return nil
+		return errors.New("rotating encryption keys failed: Encryption Providers support is not enabled")
 	}
 
 	fmt.Println("The following actions will be taken: ")

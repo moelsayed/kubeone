@@ -364,6 +364,7 @@ type Features struct {
 	// OpenIDConnect
 	OpenIDConnect *OpenIDConnect `json:"openidConnect,omitempty"`
 	// Encryption Providers
+	// +k8s:conversion-gen=false
 	EncryptionProviders *EncryptionProviders `json:"encryptionProviders,omitempty"`
 }
 
@@ -575,6 +576,6 @@ type Addons struct {
 type EncryptionProviders struct {
 	// Enable
 	Enable bool `json:"enable"`
-	// CustomProvidersFile
-	CustomProvidersFile string `json:"customProvidersFile"`
+	// CustomEncryptionConfiguration
+	CustomEncryptionConfiguration string `json:"customEncryptionConfiguration"`
 }

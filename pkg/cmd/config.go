@@ -386,6 +386,9 @@ func createAndPrintManifest(printOptions *printOpts) error {
 		cfg.Set(yamled.Path{"features", "openidConnect", "config", "requiredClaim"}, "")
 		cfg.Set(yamled.Path{"features", "openidConnect", "config", "caFile"}, "")
 	}
+	if printOptions.EnableEncryptionProviders {
+		cfg.Set(yamled.Path{"features", "encryptionProviders", "enable"}, printOptions.EnableEncryptionProviders)
+	}
 
 	// machine-controller
 	if !printOptions.DeployMachineController {
@@ -685,8 +688,8 @@ features:
   # For more information: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/
   encryptionProviders:
     # disabled by default
-	enable: {{ .EnableEncryptionProviders }}
-	customProvidersConfig: # inline string
+    enable: {{ .EnableEncryptionProviders }}
+    customProvidersConfig: # inline string
 systemPackages:
   # will add Docker and Kubernetes repositories to OS package manager
   configureRepositories: true # it's true by default

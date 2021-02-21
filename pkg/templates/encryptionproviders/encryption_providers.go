@@ -19,9 +19,11 @@ package encryptionproviders
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 
 	"k8c.io/kubeone/pkg/state"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	apiserverconfigv1 "k8s.io/apiserver/pkg/apis/config/v1"
@@ -68,7 +70,11 @@ func NewEncyrptionProvidersConfig(s *state.State) (*apiserverconfigv1.Encryption
 	}, nil
 }
 
-func UpdateEncryptionConfigDecryptOnly(config *apiserverconfigv1.EncryptionConfiguration) {
+func UpdateEncryptionConfigDecryptOnly(config *apiserverconfigv1.EncryptionConfiguration) error {
+	if config.Resources[0].Providers[0].AESCBC == nil {
+		return errors.New("empty AESCBC key configuration")
+	}
+
 	config.Resources[0].Providers = []apiserverconfigv1.ProviderConfiguration{
 		{
 			Identity: &apiserverconfigv1.IdentityConfiguration{},
@@ -77,6 +83,7 @@ func UpdateEncryptionConfigDecryptOnly(config *apiserverconfigv1.EncryptionConfi
 			AESCBC: config.Resources[0].Providers[0].AESCBC,
 		},
 	}
+	return nil
 }
 
 func UpdateEncryptionConfigWithNewKey(config *apiserverconfigv1.EncryptionConfiguration) error {

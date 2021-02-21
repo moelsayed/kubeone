@@ -968,7 +968,7 @@ func Convert_kubeone_DynamicWorkerConfig_To_v1beta1_DynamicWorkerConfig(in *kube
 
 func autoConvert_v1beta1_EncryptionProviders_To_kubeone_EncryptionProviders(in *EncryptionProviders, out *kubeone.EncryptionProviders, s conversion.Scope) error {
 	out.Enable = in.Enable
-	out.CustomProvidersFile = in.CustomProvidersFile
+	out.CustomEncryptionConfiguration = in.CustomEncryptionConfiguration
 	return nil
 }
 
@@ -979,7 +979,7 @@ func Convert_v1beta1_EncryptionProviders_To_kubeone_EncryptionProviders(in *Encr
 
 func autoConvert_kubeone_EncryptionProviders_To_v1beta1_EncryptionProviders(in *kubeone.EncryptionProviders, out *EncryptionProviders, s conversion.Scope) error {
 	out.Enable = in.Enable
-	out.CustomProvidersFile = in.CustomProvidersFile
+	out.CustomEncryptionConfiguration = in.CustomEncryptionConfiguration
 	return nil
 }
 
@@ -1031,7 +1031,7 @@ func autoConvert_kubeone_Features_To_v1beta1_Features(in *kubeone.Features, out 
 	out.DynamicAuditLog = (*DynamicAuditLog)(unsafe.Pointer(in.DynamicAuditLog))
 	out.MetricsServer = (*MetricsServer)(unsafe.Pointer(in.MetricsServer))
 	out.OpenIDConnect = (*OpenIDConnect)(unsafe.Pointer(in.OpenIDConnect))
-	out.EncryptionProviders = (*EncryptionProviders)(unsafe.Pointer(in.EncryptionProviders))
+	// INFO: in.EncryptionProviders opted out of conversion generation
 	return nil
 }
 

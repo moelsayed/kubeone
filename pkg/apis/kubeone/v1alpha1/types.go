@@ -217,13 +217,12 @@ type MachineControllerConfig struct {
 type Features struct {
 	PodNodeSelector *PodNodeSelector `json:"podNodeSelector"`
 	// Deprecated: will be removed once Kubernetes 1.19 reaches EOL
-	PodPresets          *PodPresets          `json:"podPresets"`
-	PodSecurityPolicy   *PodSecurityPolicy   `json:"podSecurityPolicy"`
-	StaticAuditLog      *StaticAuditLog      `json:"staticAuditLog"`
-	DynamicAuditLog     *DynamicAuditLog     `json:"dynamicAuditLog"`
-	MetricsServer       *MetricsServer       `json:"metricsServer"`
-	OpenIDConnect       *OpenIDConnect       `json:"openidConnect"`
-	EncryptionProviders *EncryptionProviders `json:"encryptionProviders,omitempty"`
+	PodPresets        *PodPresets        `json:"podPresets"`
+	PodSecurityPolicy *PodSecurityPolicy `json:"podSecurityPolicy"`
+	StaticAuditLog    *StaticAuditLog    `json:"staticAuditLog"`
+	DynamicAuditLog   *DynamicAuditLog   `json:"dynamicAuditLog"`
+	MetricsServer     *MetricsServer     `json:"metricsServer"`
+	OpenIDConnect     *OpenIDConnect     `json:"openidConnect"`
 }
 
 // SystemPackages controls configurations of APT/YUM
@@ -322,12 +321,4 @@ type Addons struct {
 	Enable bool `json:"enable"`
 	// Path on the local file system to the directory with addons manifests.
 	Path string `json:"path"`
-}
-
-// Encryption Providers feature flag
-type EncryptionProviders struct {
-	// Enable
-	Enable bool `json:"enable"`
-	// CustomProvidersFile
-	CustomProvidersFile string `json:"customProvidersFile"`
 }
