@@ -53,9 +53,6 @@ fi
 	deleteEncryptionProvidersConfigTemplate = `
 	sudo rm -rf /etc/kubernetes/encryption-providers/{{ .FILE_NAME }}
 `
-	restartKubeAPIContainersTemplate = `
-	docker restart $(docker ps --filter="label=io.kubernetes.container.name=kube-apiserver" -q)
-`
 )
 
 func SaveCloudConfig(workdir string) (string, error) {
@@ -87,8 +84,4 @@ func DeleteEncryptionProvidersConfig(fileName string) (string, error) {
 	return Render(deleteEncryptionProvidersConfigTemplate, Data{
 		"FILE_NAME": fileName,
 	})
-}
-
-func RestartKubeAPIContainers() (string, error) {
-	return Render(restartKubeAPIContainersTemplate, Data{})
 }
