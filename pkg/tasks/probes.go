@@ -17,7 +17,6 @@ limitations under the License.
 package tasks
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -478,7 +477,7 @@ func detectEncryptionProvidersEnabled(s *state.State) (enabled, custom bool, err
 		return enabled, custom, errors.New("kubernetes dynamic client is not initialized")
 	}
 	pods := corev1.PodList{}
-	err = s.DynamicClient.List(context.Background(), &pods, &dynclient.ListOptions{
+	err = s.DynamicClient.List(s.Context, &pods, &dynclient.ListOptions{
 		Namespace: "kube-system",
 		LabelSelector: labels.SelectorFromSet(map[string]string{
 			"component": "kube-apiserver"})})

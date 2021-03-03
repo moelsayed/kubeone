@@ -46,6 +46,7 @@ fi
 if [[ -f "{{ .WORK_DIR }}/cfg/{{ .FILE_NAME }}" ]]; then
 	sudo mkdir -p /etc/kubernetes/encryption-providers/
 	sudo mv {{ .WORK_DIR }}/cfg/{{ .FILE_NAME }} /etc/kubernetes/encryption-providers/{{ .FILE_NAME }}
+	chmod 600 /etc/kubernetes/encryption-providers/{{ .FILE_NAME }}
 	sudo chown root:root /etc/kubernetes/encryption-providers/{{ .FILE_NAME }}
 fi
 `

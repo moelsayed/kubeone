@@ -62,12 +62,16 @@ func FetchEncryptionProvidersFile(s *state.State) error {
 	return err
 }
 
-func UploadIdentityFirstEncryptionConficguration(s *state.State) error {
+func UploadIdentityFirstEncryptionConfiguration(s *state.State) error {
 	s.Logger.Infof("Uploading EncryptionProviders configuration file...")
 
 	if s.LiveCluster.EncryptionConfiguration == nil ||
 		s.LiveCluster.EncryptionConfiguration.Config == nil {
 		return errors.New("failed to read live cluster encryption providers configuration")
+	}
+
+	if s.LiveCluster.EncryptionConfiguration.Custom {
+		return errors.New("overriding custom encryption providers configuration is not supported")
 	}
 
 	oldConfig := s.LiveCluster.EncryptionConfiguration.Config.DeepCopy()

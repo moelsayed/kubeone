@@ -336,8 +336,7 @@ func runApplyUpgradeIfNeeded(s *state.State, opts *applyOpts) error {
 	if upgradeNeeded || opts.ForceUpgrade {
 		// disable case, we do this as early as possible.
 		if s.ShouldDisableEncryption() {
-			// something should happen here
-			tasksToRun = tasks.WithDisableEncryptionProviders(nil, s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration != "")
+			tasksToRun = tasks.WithDisableEncryptionProviders(nil, s.LiveCluster.EncryptionConfiguration.Custom)
 		}
 
 		tasksToRun = tasks.WithUpgrade(tasksToRun)

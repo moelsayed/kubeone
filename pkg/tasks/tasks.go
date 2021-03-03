@@ -303,7 +303,7 @@ func WithDisableEncryptionProviders(t Tasks, customConfig bool) Tasks {
 			ErrMsg:      "failed to fetch EncryptionProviders config",
 			Description: "fetch current Encryption Providers configuration file "},
 		{
-			Fn:          UploadIdentityFirstEncryptionConficguration,
+			Fn:          UploadIdentityFirstEncryptionConfiguration,
 			ErrMsg:      "failed to upload encryption providers configuration",
 			Description: "upload updated Encryption Providers configuration file"},
 		{
@@ -311,11 +311,13 @@ func WithDisableEncryptionProviders(t Tasks, customConfig bool) Tasks {
 			ErrMsg:      "failed to restart KubeAPI",
 			Description: "restart KubeAPI containers",
 		},
-		{Fn: RewriteClusterSecrets,
+		{
+			Fn:          RewriteClusterSecrets,
 			ErrMsg:      "failed to rewrite cluster secrets",
 			Description: "rewrite all cluster secrets",
 		},
-		{Fn: RemoveEncryptionProviderFile,
+		{
+			Fn:          RemoveEncryptionProviderFile,
 			ErrMsg:      "failed to remove encryption providers configuration",
 			Description: "remove old Encryption Providers configuration file",
 		},
