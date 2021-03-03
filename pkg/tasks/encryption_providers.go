@@ -148,17 +148,13 @@ func RewriteClusterSecrets(s *state.State) error {
 	if err != nil {
 		return err
 	}
+
 	for _, secret := range secrets.Items {
 		name := secret.Name
 		namespace := secret.Namespace
+
 		updateErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			toRewrite := corev1.Secret{}
-
-			if err := s.DynamicClient.Get(s.Context, types.NamespacedName{Name: name, Namespace: namespace}, &toRewrite); err != nil {
-				return err
-			}
-
-			return s.DynamicClient.Update(s.Context, &toRewrite)
+			return rewriteSecret(s, name, namespace)
 		})
 		if updateErr != nil {
 			return errors.WithStack(updateErr)
@@ -177,4 +173,13 @@ func RemoveEncryptionProviderFile(s *state.State) error {
 		_, _, err = s.Runner.RunRaw(cmd)
 		return err
 	}, state.RunParallel)
+}
+
+func rewriteSecret(s *state.State, name, namespace string) error {
+	secret := corev1.Secret{}
+
+	if err := s.DynamicClient.Get(s.Context, types.NamespacedName{Name: name, Namespace: namespace}, &secret); err != nil {
+		return err
+	}
+	return s.DynamicClient.Update(s.Context, &secret, &dynclient.UpdateOptions{})
 }

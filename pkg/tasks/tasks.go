@@ -281,7 +281,7 @@ func WithDisableEncryptionProviders(t Tasks, customConfig bool) Tasks {
 				Description: "remove old Encryption Providers configuration file",
 			},
 			{
-				Fn:          restartKubeAPIServer,
+				Fn:          ensureRestartKubeAPIServer,
 				ErrMsg:      "failed to restart KubeAPI",
 				Description: "restart KubeAPI containers",
 			},
@@ -307,7 +307,7 @@ func WithDisableEncryptionProviders(t Tasks, customConfig bool) Tasks {
 			ErrMsg:      "failed to upload encryption providers configuration",
 			Description: "upload updated Encryption Providers configuration file"},
 		{
-			Fn:          restartKubeAPIServer,
+			Fn:          ensureRestartKubeAPIServer,
 			ErrMsg:      "failed to restart KubeAPI",
 			Description: "restart KubeAPI containers",
 		},
@@ -350,7 +350,7 @@ func WithRotateKey(t Tasks) Tasks {
 			Description: "upload updated Encryption Providers configuration file",
 		},
 		{
-			Fn:          restartKubeAPIServer,
+			Fn:          ensureRestartKubeAPIServer,
 			ErrMsg:      "failed to restart KubeAPI",
 			Description: "restart KubeAPI containers",
 		},
@@ -365,7 +365,7 @@ func WithRotateKey(t Tasks) Tasks {
 			Description: "upload updated Encryption Providers configuration file",
 		},
 		{
-			Fn:          restartKubeAPIServer,
+			Fn:          ensureRestartKubeAPIServer,
 			ErrMsg:      "failed to restart KubeAPI",
 			Description: "restart KubeAPI containers",
 		},
