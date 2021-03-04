@@ -29,6 +29,5 @@ func activateEncryptionProviders(feature *kubeoneapi.EncryptionProviders, args *
 		args.APIServer.ExtraArgs[apiServerEncryptionProviderFlag] = apiServerEncryptionProviderConfigPath
 	} else {
 		args.APIServer.ExtraArgs[apiServerEncryptionProviderFlag] = apiServerEncryptionProviderCustomConfigPath
-
 	}
 }

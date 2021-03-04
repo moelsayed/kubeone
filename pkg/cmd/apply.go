@@ -195,8 +195,8 @@ func runApply(opts *applyOpts) error {
 
 	if !s.LiveCluster.Healthy() {
 		if opts.RotateEncryptionKey {
-			s.Logger.Errorln("Cluster is not healthy, encryption key rotation is not supported.")
-			return errors.New("Cluster is not healthy, encryption key rotation is not supported.")
+			s.Logger.Errorln("cluster is not healthy, encryption key rotation is not supported")
+			return errors.New("cluster is not healthy, encryption key rotation is not supported")
 		}
 
 		brokenHosts := s.LiveCluster.BrokenHosts()
