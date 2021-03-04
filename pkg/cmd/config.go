@@ -693,7 +693,7 @@ features:
   encryptionProviders:
     # disabled by default
     enable: {{ .EnableEncryptionProviders }}
-    customProvidersConfig: # inline string
+    customEncryptionConfiguration: # inline string
 systemPackages:
   # will add Docker and Kubernetes repositories to OS package manager
   configureRepositories: true # it's true by default
