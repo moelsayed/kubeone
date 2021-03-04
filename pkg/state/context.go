@@ -107,7 +107,7 @@ func (s *State) EncryptionEnabled() bool {
 }
 
 func (s *State) GetEncryptionProviderConfigName() string {
-	if (s.EncryptionEnabled() && s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration != "") ||
+	if (s.ShouldEnableEncryption() && s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration != "") ||
 		s.LiveCluster.EncryptionConfiguration.Custom {
 		return customEncryptionProvidersFile
 	}

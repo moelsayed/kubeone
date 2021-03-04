@@ -55,7 +55,7 @@ var (
 		apiserver_id=$(sudo crictl ps --name=kube-apiserver -q)
 		[ -z "$apiserver_id" ] && exit 1
 		sudo crictl rm "$apiserver_id"
-		sleep 10
+		sleep 30
 		
 	`)
 
@@ -63,7 +63,7 @@ var (
 		apiserver_id=$(sudo docker ps --filter="name=k8s_kube-apiserver" -q)
 		[ -z "$apiserver_id" ] && exit 1
 		sudo docker rm -f "$apiserver_id"
-		sleep 10
+		sleep 30
 		
 	`)
 )

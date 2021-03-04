@@ -25,11 +25,12 @@ import (
 )
 
 const (
-	apiServerAdmissionPluginsFlag         = "enable-admission-plugins"
-	apiServerAdmissionControlConfigFlag   = "admission-control-config-file"
-	apiServerAdmissionControlConfigPath   = "/etc/kubernetes/admission/admission-config.yaml"
-	apiServerEncryptionProviderFlag       = "encryption-provider-config"
-	apiServerEncryptionProviderConfigPath = "/etc/kubernetes/encryption-providers/encryption-providers.yaml"
+	apiServerAdmissionPluginsFlag               = "enable-admission-plugins"
+	apiServerAdmissionControlConfigFlag         = "admission-control-config-file"
+	apiServerAdmissionControlConfigPath         = "/etc/kubernetes/admission/admission-config.yaml"
+	apiServerEncryptionProviderFlag             = "encryption-provider-config"
+	apiServerEncryptionProviderConfigPath       = "/etc/kubernetes/encryption-providers/encryption-providers.yaml"
+	apiServerEncryptionProviderCustomConfigPath = "/etc/kubernetes/encryption-providers/custom-encryption-providers.yaml"
 )
 
 // Activate configured features.

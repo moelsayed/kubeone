@@ -58,13 +58,14 @@ func generateConfigurationFiles(s *state.State) error {
 		}
 	}
 
-	if s.ShouldEnableEncryption() {
+	if s.ShouldEnableEncryption() || s.EncryptionEnabled() {
 		configFileName := s.GetEncryptionProviderConfigName()
 		var config string
 		// User provided custom config
 		if s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration != "" {
 			config = s.Cluster.Features.EncryptionProviders.CustomEncryptionConfiguration
-		} else { // automatically generate config
+			s.Configuration.AddFile(fmt.Sprintf("cfg/%s", configFileName), config)
+		} else if s.ShouldEnableEncryption() { // automatically generate config
 			encryptionProvidersConfig, err := encryptionproviders.NewEncyrptionProvidersConfig(s)
 			if err != nil {
 				return err
@@ -73,8 +74,8 @@ func generateConfigurationFiles(s *state.State) error {
 			if err != nil {
 				return err
 			}
+			s.Configuration.AddFile(fmt.Sprintf("cfg/%s", configFileName), config)
 		}
-		s.Configuration.AddFile(fmt.Sprintf("cfg/%s", configFileName), config)
 	}
 
 	return nil
